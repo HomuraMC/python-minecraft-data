@@ -2,16 +2,27 @@ name: Update submodules
 on:
   schedule:
     - cron:  '0 * * * *'
-  workflow_dispatch:
   push:
     branches:
       - master
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   update_submodules:
+    permissions:
+      actions: write
+      checks: write
+      contents: write
+      deployments: write
+      issues: write
+      packages: write
+      pull-requests: write
+      repository-projects: write
+      security-events: write
+      statuses: write
     name: Update submodules
     runs-on: ubuntu-latest
     env:
@@ -35,8 +46,9 @@ jobs:
         git commit -m "Update submodules at $(date "+DATE: %Y-%m-%d TIME: %H:%M:%S")"
       if: ${{ steps.status.outputs.status }}
     - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: master
+      run: |
+        git remote set-url origin https://github-actions:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "GitHub Actions"
+        git push origin HEAD:${GITHUB_REF}; \
       if: ${{ steps.status.outputs.status && github.event_name == 'push' }}
